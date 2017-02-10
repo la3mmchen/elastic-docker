@@ -1,0 +1,62 @@
+version: '2'
+services:
+  elasticsearch:
+    hostname: elastic
+    domainname: elastic-local
+    image: elasticsearch:latest
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - $PWD/elasticsearch/config:/usr/share/elasticsearch/config
+      - es-data:/data
+  kibana:
+    hostname: kibana
+    domainname: elastic-local
+    image: kibana:latest
+    depends_on:
+      - "elasticsearch"
+    ports:
+      - "8888:5601"
+  logstash:
+    hostname: logstash:latest
+    domainname: elastic-local
+    command: logstash -f /etc/logstash/conf.d/logstash.conf
+    image: logstash
+    depends_on:
+      - "elasticsearch"
+    volumes:
+      - $PWD/logstash/:/etc/logstash/conf.d
+  zookeeper:
+    hostname: zookeeper
+    domainname: elastic-local
+    image: zookeeper
+    ports:
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+    environment:
+      ZOO_MY_ID: 1
+  kafka:
+    hostname: kafka
+    domainname: elastic-local
+    image: wurstmeister/kafka
+    depends_on:
+      - "zookeeper"
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    ports:
+      - "9092:9092"
+  filebeat:
+    hostname: filebeat
+    domainname: elastic-local
+    image: prima/filebeat:5.0.0-rc1
+    depends_on:
+      - "kafka"
+    volumes:
+      - $PWD/filebeat/filebeat.yml:/filebeat.yml
+volumes:
+  es-data:
+    driver: local
