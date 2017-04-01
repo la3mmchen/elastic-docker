@@ -3,7 +3,7 @@ services:
   elasticsearch:
     hostname: elastic
     domainname: elastic-local
-    image: elasticsearch:latest
+    image: docker.elastic.co/elasticsearch/elasticsearch:5.3.0
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -13,16 +13,16 @@ services:
   kibana:
     hostname: kibana
     domainname: elastic-local
-    image: kibana:latest
+    image: docker.elastic.co/kibana/kibana:5.3.0
     depends_on:
       - "elasticsearch"
     ports:
       - "8888:5601"
   logstash:
-    hostname: logstash:latest
+    hostname: logstash
     domainname: elastic-local
     command: logstash -f /etc/logstash/conf.d/logstash.conf
-    image: logstash
+    image: docker.elastic.co/logstash/logstash:5.3.0
     depends_on:
       - "elasticsearch"
     volumes:
