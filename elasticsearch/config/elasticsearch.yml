@@ -5,12 +5,14 @@ discovery:
     minimum_master_nodes: 1
     ping:
       unicast:
-        hosts: [ 'elasticsearch' ]
+        hosts: [ 'elasticsearch-1', 'elasticsearch-2' ]
 path:
   logs: /var/log/elasticsearch
+  data: /var/data
+  repo: /repo/
 network:
   host: ['0.0.0.0']
 node:
-  name: elastic-local
+  name: ${HOSTNAME}
   data: true
   master: true

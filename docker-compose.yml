@@ -1,62 +1,96 @@
 version: '2'
 services:
-  elasticsearch:
-    hostname: elastic
+  elasticsearch-1:
+    hostname: elastic-1
+    container_name: elastic-1
     domainname: elastic-local
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.3.0
+    image: la3mmchen/elastic-docker-image
     ports:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - $PWD/elasticsearch/config:/usr/share/elasticsearch/config
-      - es-data:/data
+      - $PWD/elasticsearch/config:/etc/elasticsearch
+      - es-data-1:/data-1
+      - es-repo:/repo
+  elasticsearch-2:
+    hostname: elastic-2
+    container_name: elastic-2
+    domainname: elastic-local
+    image: la3mmchen/elastic-docker-image
+    volumes:
+      - $PWD/elasticsearch/config:/etc/elasticsearch/
+      - es-data-2:/data-2
+      - es-repo:/repo
+#  elasticsearch-3:
+#    hostname: elastic-3
+#    container_name: elastic-3
+#    domainname: elastic-local
+#    image: la3mmchen/elastic-docker-image
+#    volumes:
+#      - $PWD/elasticsearch/config:/etc/elasticsearch
+#      - es-data-3:/data-3
+#      - es-repo:/repo
   kibana:
     hostname: kibana
+    container_name: kibana
     domainname: elastic-local
-    image: docker.elastic.co/kibana/kibana:5.3.0
+    image: kibana
     depends_on:
-      - "elasticsearch"
+      - "elasticsearch-1"
     ports:
-      - "8888:5601"
+      - "5601:5601"
+    volumes:
+      - $PWD/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
   logstash:
     hostname: logstash
+    container_name: logstash
     domainname: elastic-local
-    command: logstash -f /etc/logstash/conf.d/logstash.conf
-    image: docker.elastic.co/logstash/logstash:5.3.0
-    depends_on:
-      - "elasticsearch"
+    image: la3mmchen/logstash-docker-image:latest
+    ports:
+      - "8080:8080"
     volumes:
-      - $PWD/logstash/:/etc/logstash/conf.d
-  zookeeper:
-    hostname: zookeeper
+      - $PWD/logstash/logstash.conf:/etc/logstash/logstash.conf
+  prometheus:
+    hostname: prometheus
+    container_name: prometheus
     domainname: elastic-local
-    image: zookeeper
+    image: prom/prometheus
+    command:
+       - "-storage.local.series-file-shrink-ratio=0.3"
+       - "-config.file=/etc/prometheus/prometheus.yml"
+       - "-storage.local.path=/prometheus/data"
+       - "-alertmanager.url=http://alertmanager:9093/"
     ports:
-      - "2181:2181"
-      - "2888:2888"
-      - "3888:3888"
-    environment:
-      ZOO_MY_ID: 1
-  kafka:
-    hostname: kafka
+      - "9090:9090"
+    volumes:
+      - $PWD/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - prom-data:/prometheus/data
+  grafana:
+    hostname: grafana
+    container_name: grafana
     domainname: elastic-local
-    image: wurstmeister/kafka
-    depends_on:
-      - "zookeeper"
-    environment:
-      KAFKA_ADVERTISED_HOST_NAME: kafka
-      KAFKA_ADVERTISED_PORT: 9092
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+    image: grafana/grafana
     ports:
-      - "9092:9092"
+      - "3000:3000"
+  redis:
+    hostname: redis
+    container_name: redis
+    domainname: elastic-local
+    image: redis
   filebeat:
     hostname: filebeat
     domainname: elastic-local
     image: prima/filebeat:5.0.0-rc1
-    depends_on:
-      - "kafka"
     volumes:
       - $PWD/filebeat/filebeat.yml:/filebeat.yml
 volumes:
-  es-data:
+  es-data-1:
+    driver: local
+  es-data-2:
+    driver: local
+  es-data-3:
+    driver: local
+  prom-data:
+    driver: local
+  es-repo:
     driver: local
