@@ -64,6 +64,7 @@ services:
       - "9090:9090"
     volumes:
       - $PWD/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - $PWD/prometheus/alert-applications.rule:/opt/applications/alert-applications.rule
       - prom-data:/prometheus/data
   grafana:
     hostname: grafana
@@ -83,6 +84,14 @@ services:
     image: prima/filebeat:5.0.0-rc1
     volumes:
       - $PWD/filebeat/filebeat.yml:/filebeat.yml
+  alertmanager:
+    hostname: alertmanager
+    domainname: elastic-local
+    image: prom/alertmanager
+    ports:
+      - "9093:9093"
+    volumes:
+      - $PWD/alertmanager/alertmanager.yml:/etc/prometheus/alertmanager.yml
 volumes:
   es-data-1:
     driver: local
