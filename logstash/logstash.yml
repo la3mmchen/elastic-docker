@@ -1,0 +1,19 @@
+http.host: "0.0.0.0"
+# runtime settings
+path.data: /tmp/logstash/data
+path.logs: /tmp/logstash/logs
+#path.config: /usr/share/logstash/pipeline
+
+# auto reload config in seconds
+config.reload.automatic: true
+config.reload.interval: 30
+
+xpack.monitoring.elasticsearch.url: http://elastic-1:9200
+xpack.monitoring.elasticsearch.username: elastic
+xpack.monitoring.elasticsearch.password: changeme
+xpack.management.enabled: true
+xpack.management.elasticsearch.url: "http://elastic-1:9200/"
+xpack.management.elasticsearch.username: elastic
+xpack.management.elasticsearch.password: changeme
+xpack.management.logstash.poll_interval: 5s
+xpack.management.pipeline.id: ["generic_http", "filebeat", "metricbeat"]

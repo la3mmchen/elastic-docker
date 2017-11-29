@@ -1,0 +1,48 @@
+{
+  "template": "index-*",
+  "settings": {
+    "number_of_shards": "2",
+    "number_of_replicas" : "1",
+    "refresh_interval" : "5s",
+    "routing.allocation.require.zone" : "ssd"
+  },
+  "mappings": {
+    "_default_": {
+      "_all": {
+        "enabled": false
+      },
+      "date_detection": false,
+      "dynamic_templates": [
+        {
+          "all-keywords": {
+            "match": "*",
+            "mapping": {
+              "type": "keyword"
+            }
+          }
+        }
+      ],
+      "properties" : {
+        "sourcetimestamp": {
+          "type" : "date"
+        },
+        "beat": {
+          "properties": {
+            "hostname": {"type": "keyword"},
+            "name": {"type": "keyword"},
+            "version": {"type": "keyword"}
+          }
+        },
+        "fields": {
+          "properties": {
+            "service": {"type": "keyword"}
+          }
+        },
+        "log-message": {
+          "type": "keyword",
+          "ignore_above": 10922
+        }
+      }
+    }
+  }
+}

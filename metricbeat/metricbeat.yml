@@ -1,0 +1,25 @@
+metricbeat.modules:
+- module: system
+  metricsets:
+    - cpu
+    - filesystem
+    - memory
+    - network
+    - process
+  enabled: true
+  period: 10s
+  processes: ['.*']
+  fields_under_root: true
+  fields:
+    topic: metricsets
+
+output.kafka:
+  hosts: ["kafka-1:9092"]
+
+  topic: "%{[topic]}"
+  partition.round_robin:
+    reachable_only: true
+
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000

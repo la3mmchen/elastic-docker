@@ -1,16 +1,22 @@
 cluster:
-  name: elastic-local
+  name: ${CLUSTER}
 discovery:
   zen:
     minimum_master_nodes: 1
     ping:
       unicast:
-        hosts: [ 'elasticsearch' ]
+        hosts: [ 'elastic-1', 'elastic-2' ]
 path:
-  logs: /var/log/elasticsearch
+  repo: /repo/
 network:
   host: ['0.0.0.0']
 node:
-  name: elastic-local
+  name: ${HOSTNAME}
   data: true
   master: true
+xpack.monitoring.exporters:
+  id1:
+    type: http
+    host: ["http://elastic-1"]
+    auth.username: elastic
+    auth.password: changeme

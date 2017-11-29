@@ -1,0 +1,6 @@
+server.host: '0.0.0.0'
+elasticsearch.url: 'http://elastic-1:9200'
+server.name: kibana
+elasticsearch.username: elastic
+elasticsearch.password: changeme
+console.enabled: false

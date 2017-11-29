@@ -1,62 +1,107 @@
-version: '2'
+version: '3'
 services:
-  elasticsearch:
-    hostname: elastic
-    domainname: elastic-local
-    image: docker.elastic.co/elasticsearch/elasticsearch:5.3.0
+
+  elastic-1:
+    domainname: ${DOMAIN}
+    container_name: ${NAMESPACE}elastic-1
+    image: docker.elastic.co/elasticsearch/elasticsearch:${VERSION}
+    networks:
+      - internal
+    environment:
+      - CLUSTER=${CLUSTER}
     ports:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - $PWD/elasticsearch/config:/usr/share/elasticsearch/config
-      - es-data:/data
-  kibana:
-    hostname: kibana
-    domainname: elastic-local
-    image: docker.elastic.co/kibana/kibana:5.3.0
-    depends_on:
-      - "elasticsearch"
+      - $PWD/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - $PWD/elasticsearch/config/jvm.options:/usr/share/elasticsearch/config/jvm.options
+      - data-elastic-1:/data
+      - es-repo:/repo
+
+  kibana-1:
+    domainname: ${DOMAIN}
+    container_name: ${NAMESPACE}kibana-1
+    image: docker.elastic.co/kibana/kibana:${VERSION}
+    networks:
+      - internal
     ports:
-      - "8888:5601"
-  logstash:
-    hostname: logstash
-    domainname: elastic-local
-    command: logstash -f /etc/logstash/conf.d/logstash.conf
-    image: docker.elastic.co/logstash/logstash:5.3.0
-    depends_on:
-      - "elasticsearch"
+      - "5601:5601"
     volumes:
-      - $PWD/logstash/:/etc/logstash/conf.d
-  zookeeper:
-    hostname: zookeeper
+      - $PWD/kibana/kibana.yml:/usr/share/kibana/config/kibana.yml
+
+  logstash-1:
+    container_name: ${NAMESPACE}logstash-1
+    domainname: ${DOMAIN}
+    image: docker.elastic.co/logstash/logstash:${VERSION}
+    networks:
+      - internal
+    ports:
+      - "8000:8000"
+    volumes:
+      - $PWD/logstash/logstash.yml:/usr/share/logstash/config/logstash.yml
+
+  filebeat-1:
+    container_name: ${NAMESPACE}filebeat-1
+    domainname: ${DOMAIN}
+    image: docker.elastic.co/beats/filebeat:${VERSION}
+    networks:
+      - internal
+    volumes:
+      - $PWD/filebeat/filebeat.yml:/usr/share/filebeat/filebeat.yml
+      - $PWD/filebeat/logs/:/tmp/logs/
+
+  metricbeat-1:
+    container_name: ${NAMESPACE}metricbeat-1
     domainname: elastic-local
+    image: docker.elastic.co/beats/metricbeat:${VERSION}
+    networks:
+      - internal
+    volumes:
+      - $PWD/metricbeat/metricbeat.yml:/usr/share/metricbeat/metricbeat.yml
+
+  zookeeper-1:
+    container_name: ${NAMESPACE}zookeeper-1
+    domainname: ${DOMAIN}
     image: zookeeper
     ports:
       - "2181:2181"
       - "2888:2888"
       - "3888:3888"
+    networks:
+      - internal
     environment:
-      ZOO_MY_ID: 1
-  kafka:
-    hostname: kafka
-    domainname: elastic-local
+      ZOO_MY_ID: 42
+
+  kafka-1:
+    container_name: ${NAMESPACE}kafka-1
+    domainname: ${DOMAIN}
     image: wurstmeister/kafka
-    depends_on:
-      - "zookeeper"
-    environment:
-      KAFKA_ADVERTISED_HOST_NAME: kafka
-      KAFKA_ADVERTISED_PORT: 9092
-      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
     ports:
       - "9092:9092"
-  filebeat:
-    hostname: filebeat
-    domainname: elastic-local
-    image: prima/filebeat:5.0.0-rc1
-    depends_on:
-      - "kafka"
+    networks:
+      - internal
+    environment:
+      KAFKA_ADVERTISED_HOST_NAME: kafka-1
+      KAFKA_ADVERTISED_PORT: 9092
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper-1:2181
+
+  curator-1:
+    container_name: ${NAMESPACE}curator-1
+    domainname: ${DOMAIN}
+    image: bobrik/curator
+    networks: 
+      - internal
     volumes:
-      - $PWD/filebeat/filebeat.yml:/filebeat.yml
+      - $PWD/curator/curator.yml:/tmp/curator.yml
+      - $PWD/curator/delete_old.yml:/tmp/delete_old.yml
+    entrypoint: tail -f /dev/null
+
 volumes:
-  es-data:
+  data-elastic-1:
     driver: local
+  es-repo:
+    driver: local
+
+networks:
+  internal:
+
